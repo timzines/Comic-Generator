@@ -13,6 +13,7 @@ interface Body {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
+    if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     const body = (await request.json()) as Body;
 
     const { data, error } = await supabaseAdmin
