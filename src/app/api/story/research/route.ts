@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
 
     const completion = await grok.chat.completions.create({
       model: GROK_MODEL,
-      // @ts-expect-error — xAI web_search tool not in OpenAI types
-      tools: [{ type: 'web_search' }],
+      // @ts-expect-error — xAI Live Search extension
+      search_parameters: { mode: 'auto' },
       messages: [
         {
           role: 'system',
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(parsed);
   } catch (err) {
     console.error('[research]', err);
-    return NextResponse.json({ error: 'research_failed' }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'unknown';
+    return NextResponse.json({ error: 'research_failed', detail: message }, { status: 500 });
   }
 }
