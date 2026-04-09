@@ -1,10 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
+// AUTH BYPASS: fixed guest user so everything works without sign-in.
+export const GUEST_USER_ID = '00000000-0000-0000-0000-000000000000';
+
 export async function requireUser() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  if (user) return user;
+  return { id: GUEST_USER_ID, email: 'guest@local' } as { id: string; email: string };
 }
 
 export async function verifyComicOwnership(comicId: string, userId: string) {

@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import type { ResearchResponse, StoryOptionData } from '@/types/api';
 import { StepDescribe } from '@/components/comic/wizard/StepDescribe';
 import { StepResearch } from '@/components/comic/wizard/StepResearch';
@@ -20,7 +19,6 @@ export interface WizardForm {
 const STEPS = ['Describe', 'Research', 'Story', 'Panels'];
 
 export default function NewComicPage() {
-  const supabase = createClient();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [comicId, setComicId] = useState<string | null>(null);
@@ -42,24 +40,21 @@ export default function NewComicPage() {
 
   async function ensureComic(): Promise<string> {
     if (comicId) return comicId;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('not authenticated');
-    const { data, error } = await supabase
-      .from('comics')
-      .insert({
-        user_id: user.id,
+    const res = await fetch('/api/comic/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         title: form.title || 'Untitled',
         description: form.description,
         genre: form.genre,
         style: form.style === 'Custom' ? form.customStyle : form.style,
-        custom_style: form.style === 'Custom' ? form.customStyle : null,
-        status: 'drafting',
-      })
-      .select('id')
-      .single();
-    if (error || !data) throw new Error(error?.message ?? 'could not create comic');
-    setComicId(data.id);
-    return data.id;
+        customStyle: form.style === 'Custom' ? form.customStyle : null,
+      }),
+    });
+    if (!res.ok) throw new Error('could not create comic');
+    const { id } = (await res.json()) as { id: string };
+    setComicId(id);
+    return id;
   }
 
   async function handleResearch() {
