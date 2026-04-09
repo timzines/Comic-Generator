@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { NextResponse, type NextRequest } from 'next/server';
 import { requireUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';

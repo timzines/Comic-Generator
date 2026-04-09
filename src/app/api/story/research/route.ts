@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { NextResponse, type NextRequest } from 'next/server';
 import { grok, GROK_MODEL, stripJsonFences } from '@/lib/grok';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';

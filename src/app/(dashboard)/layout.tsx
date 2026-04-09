@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { Nav } from '@/components/Nav';
 import { UserProvider } from '@/contexts/UserContext';
 
-export const runtime = 'edge';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
