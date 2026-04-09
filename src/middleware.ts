@@ -38,18 +38,8 @@ export async function middleware(request: NextRequest) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
-
-  if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
-  }
-
-  if (user && isAuthPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
-  }
+  // AUTH BYPASS: sign-in temporarily disabled, all dashboard routes open
+  void user; void isPublic; void isAuthPage;
 
   return response;
 }
