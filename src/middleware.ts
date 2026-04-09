@@ -32,8 +32,24 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
   const isPublic = isAuthPage || pathname.startsWith('/api/auth') || pathname === '/';
 
-  // AUTH BYPASS: sign-in temporarily disabled.
-  void user; void isPublic; void isAuthPage;
+  // Signups disabled — redirect away from /signup
+  if (pathname.startsWith('/signup')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
+  if (!user && !isPublic) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
+  if (user && isAuthPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
+  }
 
   return response;
 }
