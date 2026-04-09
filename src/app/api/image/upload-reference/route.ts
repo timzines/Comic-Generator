@@ -1,5 +1,5 @@
+export const runtime = 'edge';
 import { NextResponse, type NextRequest } from 'next/server';
-import { randomUUID } from 'crypto';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
     }
 
     const ext = file.name.split('.').pop() || 'jpg';
-    const storagePath = `${user.id}/${comicId}/${randomUUID()}.${ext}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const storagePath = `${user.id}/${comicId}/${crypto.randomUUID()}.${ext}`;
+    const buffer = new Uint8Array(await file.arrayBuffer());
 
     const { error: upErr } = await supabaseAdmin.storage
       .from('reference-images')

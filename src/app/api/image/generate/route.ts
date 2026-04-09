@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextResponse, type NextRequest } from 'next/server';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { generatePanelInternal } from '@/lib/generate-panel';

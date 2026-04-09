@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextResponse, type NextRequest } from 'next/server';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (!rawUrl) return NextResponse.json({ error: 'no_image_url' }, { status: 500 });
 
     const imgRes = await fetch(rawUrl);
-    const buffer = Buffer.from(await imgRes.arrayBuffer());
+    const buffer = new Uint8Array(await imgRes.arrayBuffer());
     const storagePath = `${user.id}/${comicId}/${panelId}_edit_${Date.now()}.jpg`;
 
     await supabaseAdmin.storage

@@ -56,8 +56,7 @@ export async function generatePanelInternal(panelId: string, comicId: string, us
     if (!rawUrl) throw new Error('no_image_url');
 
     const imgRes = await fetch(rawUrl);
-    const arrayBuffer = await imgRes.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const buffer = new Uint8Array(await imgRes.arrayBuffer());
 
     const storagePath = `${userId}/${comicId}/${panelId}.jpg`;
     const { error: upErr } = await supabaseAdmin.storage

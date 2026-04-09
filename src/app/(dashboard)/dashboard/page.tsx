@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { createClient } from '@/lib/supabase/server';
 import { DashboardClient } from './DashboardClient';
 import type { Comic } from '@/types/database';
