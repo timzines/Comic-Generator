@@ -3,7 +3,7 @@ import { DashboardClient } from './DashboardClient';
 import type { Comic } from '@/types/database';
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from('comics')
     .select('*')

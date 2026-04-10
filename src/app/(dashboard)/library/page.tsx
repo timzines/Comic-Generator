@@ -3,7 +3,7 @@ import { LibraryClient } from './LibraryClient';
 import type { Comic } from '@/types/database';
 
 export default async function LibraryPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from('comics')
     .select('*')
