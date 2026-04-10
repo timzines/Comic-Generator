@@ -20,7 +20,7 @@ export const grok: OpenAI = new Proxy({} as OpenAI, {
   },
 }) as OpenAI;
 
-export const GROK_MODEL = 'grok-3';
+export const GROK_MODEL = process.env.XAI_MODEL || 'grok-2-latest';
 
 export function stripJsonFences(text: string): string {
   return text
