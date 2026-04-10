@@ -17,8 +17,6 @@ export async function POST(request: NextRequest) {
 
     const completion = await grok.chat.completions.create({
       model: GROK_MODEL,
-      // @ts-expect-error — xAI Live Search extension
-      search_parameters: { mode: 'auto' },
       messages: [
         {
           role: 'system',
