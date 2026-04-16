@@ -45,9 +45,10 @@ export async function POST(request: NextRequest) {
 
     const characterBible = completion.choices[0]?.message?.content?.trim() ?? '';
 
+    const pageCount = (option.estimated_pages as number | null) ?? 1;
     await supabaseAdmin
       .from('comics')
-      .update({ character_bible: characterBible, status: 'generating' })
+      .update({ character_bible: characterBible, status: 'generating', page_count: pageCount })
       .eq('id', comicId);
 
     await supabaseAdmin.from('story_options').update({ selected: false }).eq('comic_id', comicId);

@@ -5,9 +5,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 interface Body {
   title: string;
   description: string;
-  genre: string;
-  style: string;
-  customStyle: string | null;
 }
 
 export async function POST(request: NextRequest) {
@@ -22,9 +19,9 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         title: body.title || 'Untitled',
         description: body.description,
-        genre: body.genre,
-        style: body.style,
-        custom_style: body.customStyle,
+        genre: null,
+        style: 'Manga',
+        custom_style: null,
         status: 'drafting',
       })
       .select('id')

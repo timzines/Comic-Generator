@@ -8,6 +8,6 @@ export default async function ReadPage({ params }: { params: Promise<{ id: strin
   const supabase = await createClient();
   const { data: comic } = await supabase.from('comics').select('*').eq('id', id).single();
   if (!comic) notFound();
-  const { data: panels } = await supabase.from('panels').select('*').eq('comic_id', id).order('panel_index');
+  const { data: panels } = await supabase.from('panels').select('*').eq('comic_id', id).order('page_number').order('position_in_page');
   return <ReaderClient comic={comic as Comic} panels={(panels as Panel[]) ?? []} />;
 }

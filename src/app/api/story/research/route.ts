@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
     const body = (await request.json()) as ResearchRequest;
-    const { comicId, description, genre, style } = body;
+    const { comicId, description } = body;
 
     if (!(await verifyComicOwnership(comicId, user.id))) {
       return NextResponse.json({ error: 'forbidden' }, { status: 403 });
@@ -21,11 +21,11 @@ export async function POST(request: NextRequest) {
         {
           role: 'system',
           content:
-            'You are a creative director for a comic book studio. You research visual and narrative inspiration for comics. Always respond with valid JSON only, no markdown.',
+            'You are a creative director for a manga studio. You research visual and narrative inspiration for manga comics. Always respond with valid JSON only, no markdown.',
         },
         {
           role: 'user',
-          content: `Search the internet for inspiration for a ${genre} comic in ${style} art style. The concept is: ${description}. Return a JSON object with two fields: "inspirations" (array of 5 strings, each a specific reference work or real-world source with brief explanation) and "themes" (array of 3 thematic angles to explore).`,
+          content: `Search the internet for inspiration for a manga comic. The concept is: ${description}. Return a JSON object with two fields: "inspirations" (array of 5 strings, each a specific reference work or real-world source with brief explanation) and "themes" (array of 3 thematic angles to explore).`,
         },
       ],
     });

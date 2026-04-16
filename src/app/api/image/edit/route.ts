@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { fal, FAL_EDIT_MODEL } from '@/lib/fal';
+import { fal, FAL_EDIT_MODEL, EDIT_PARAMS } from '@/lib/fal';
 import type { EditImageRequest } from '@/types/api';
 
 export async function POST(request: NextRequest) {
@@ -26,8 +26,7 @@ export async function POST(request: NextRequest) {
     const input: Record<string, unknown> = {
       prompt: editPrompt,
       image_url: panel.image_url,
-      num_inference_steps: 28,
-      guidance_scale: 3.5,
+      ...EDIT_PARAMS,
     };
     if (maskImage) input.mask_url = maskImage;
     if (referenceImageUrl) input.reference_image_url = referenceImageUrl;

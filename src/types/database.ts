@@ -6,6 +6,16 @@ export interface ActBreakdown {
   desc: string;
 }
 
+export interface PageStructure {
+  pageNumber: number;
+  panelCount: number;
+  panels: {
+    position: number;
+    description: string;
+    dialog: string | null;
+  }[];
+}
+
 export interface Profile {
   id: string;
   display_name: string | null;
@@ -24,6 +34,8 @@ export interface Comic {
   status: ComicStatus;
   character_bible: string | null;
   panel_count: number;
+  page_count: number;
+  storyline_prompt: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +48,8 @@ export interface StoryOption {
   logline: string | null;
   act_breakdown: ActBreakdown[] | null;
   estimated_panels: number | null;
+  estimated_pages: number | null;
+  page_structure: PageStructure[] | null;
   tone: string | null;
   selected: boolean;
   created_at: string;
@@ -45,7 +59,10 @@ export interface Panel {
   id: string;
   comic_id: string;
   panel_index: number;
+  page_number: number;
+  position_in_page: number;
   prompt: string | null;
+  dialog: string | null;
   image_url: string | null;
   storage_path: string | null;
   status: PanelStatus;

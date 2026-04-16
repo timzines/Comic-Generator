@@ -1,10 +1,8 @@
-import type { ActBreakdown } from './database';
+import type { ActBreakdown, PageStructure } from './database';
 
 export interface ResearchRequest {
   comicId: string;
   description: string;
-  genre: string;
-  style: string;
 }
 export interface ResearchResponse {
   inspirations: string[];
@@ -16,14 +14,14 @@ export interface StoryOptionData {
   logline: string;
   actBreakdown: ActBreakdown[];
   estimatedPanels: number;
+  estimatedPages: number;
+  pageStructure: PageStructure[];
   tone: string;
 }
 
 export interface StoryOptionsRequest {
   comicId: string;
   description: string;
-  genre: string;
-  style: string;
   research: ResearchResponse;
 }
 export interface StoryOptionsResponse {
@@ -38,11 +36,19 @@ export interface SelectOptionResponse {
   characterBible: string;
 }
 
+export interface EditStorylineRequest {
+  comicId: string;
+  editPrompt: string;
+}
+export interface EditStorylineResponse {
+  options: StoryOptionData[];
+}
+
 export interface GeneratePanelsRequest {
   comicId: string;
 }
 export interface GeneratePanelsResponse {
-  panels: { id: string; panelIndex: number; prompt: string }[];
+  panels: { id: string; panelIndex: number; pageNumber: number; positionInPage: number; prompt: string; dialog: string | null }[];
 }
 
 export interface GenerateImageRequest {

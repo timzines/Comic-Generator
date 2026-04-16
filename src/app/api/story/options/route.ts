@@ -1,18 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { z } from 'zod';
 import { grok, GROK_MODEL, stripJsonFences } from '@/lib/grok';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { OptionsSchema } from '@/lib/schemas/story';
 import type { StoryOptionsRequest } from '@/types/api';
-
-const OptionSchema = z.object({
-  title: z.string(),
-  logline: z.string(),
-  actBreakdown: z.array(z.object({ act: z.string(), desc: z.string() })).length(3),
-  estimatedPanels: z.number().int().min(4).max(24),
-  tone: z.string(),
-});
-const OptionsSchema = z.array(OptionSchema).length(3);
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +11,7 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
     const body = (await request.json()) as StoryOptionsRequest;
-    const { comicId, description, genre, style, research } = body;
+    const { comicId, description, research } = body;
 
     if (!(await verifyComicOwnership(comicId, user.id))) {
       return NextResponse.json({ error: 'forbidden' }, { status: 403 });
@@ -34,11 +25,11 @@ export async function POST(request: NextRequest) {
         {
           role: 'system',
           content:
-            'You are a master comic book writer. You write compelling, visually-rich story structures. Respond ONLY with a valid JSON array. No markdown, no explanation, no preamble.',
+            'You are a master manga writer and page layout director. You write compelling, visually-rich story structures with detailed page-by-page breakdowns. Respond ONLY with a valid JSON array. No markdown, no explanation, no preamble.',
         },
         {
           role: 'user',
-          content: `Write exactly 3 distinct story options for a ${genre} comic titled "${comic?.title ?? 'Untitled'}" in ${style} art style.
+          content: `Write exactly 3 distinct story options for a manga comic titled "${comic?.title ?? 'Untitled'}".
 
 Concept: ${description}
 
@@ -49,8 +40,18 @@ Return a JSON array of exactly 3 objects, each with:
 - title: string (compelling story title)
 - logline: string (one punchy sentence describing the story)
 - actBreakdown: array of exactly 3 objects, each with 'act' (string: 'Act 1', 'Act 2', 'Act 3') and 'desc' (string: 2 sentence description of what happens)
-- estimatedPanels: number (between 8 and 14)
-- tone: string (2-3 words describing the emotional tone)`,
+- estimatedPanels: number (total panel count across all pages)
+- estimatedPages: number (between 3 and 8)
+- pageStructure: array of page objects, one per page. Each page has:
+  - pageNumber: number (1-based)
+  - panelCount: number (3-5 panels per page)
+  - panels: array of panel objects, each with:
+    - position: number (0-based index within the page)
+    - description: string (vivid manga scene description — action, framing, emotion)
+    - dialog: string or null (character speech/thought bubble text, null if no dialog)
+- tone: string (2-3 words describing the emotional tone)
+
+Think like a manga editor: pace reveals across pages, use splash panels for dramatic moments, and write dialog that sounds natural. The total panels across all pages must equal estimatedPanels.`,
         },
       ],
     });
@@ -66,6 +67,8 @@ Return a JSON array of exactly 3 objects, each with:
       logline: o.logline,
       act_breakdown: o.actBreakdown,
       estimated_panels: o.estimatedPanels,
+      estimated_pages: o.estimatedPages,
+      page_structure: o.pageStructure,
       tone: o.tone,
       selected: false,
     }));

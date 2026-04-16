@@ -9,11 +9,17 @@ import { StepPanels } from '@/components/comic/wizard/StepPanels';
 
 export interface WizardForm {
   title: string;
-  genre: string;
-  style: string;
-  customStyle: string;
   description: string;
   referenceImageIds: string[];
+}
+
+interface PanelData {
+  id: string;
+  panelIndex: number;
+  pageNumber: number;
+  positionInPage: number;
+  prompt: string;
+  dialog: string | null;
 }
 
 const STEPS = ['Describe', 'Research', 'Story', 'Panels'];
@@ -24,9 +30,6 @@ export default function NewComicPage() {
   const [comicId, setComicId] = useState<string | null>(null);
   const [form, setForm] = useState<WizardForm>({
     title: '',
-    genre: '',
-    style: '',
-    customStyle: '',
     description: '',
     referenceImageIds: [],
   });
@@ -34,8 +37,9 @@ export default function NewComicPage() {
   const [options, setOptions] = useState<StoryOptionData[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [characterBible, setCharacterBible] = useState<string>('');
-  const [panels, setPanels] = useState<{ id: string; panelIndex: number; prompt: string }[]>([]);
+  const [panels, setPanels] = useState<PanelData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function ensureComic(): Promise<string> {
@@ -46,9 +50,6 @@ export default function NewComicPage() {
       body: JSON.stringify({
         title: form.title || 'Untitled',
         description: form.description,
-        genre: form.genre,
-        style: form.style === 'Custom' ? form.customStyle : form.style,
-        customStyle: form.style === 'Custom' ? form.customStyle : null,
       }),
     });
     if (!res.ok) throw new Error('could not create comic');
@@ -68,8 +69,6 @@ export default function NewComicPage() {
         body: JSON.stringify({
           comicId: id,
           description: form.description,
-          genre: form.genre,
-          style: form.style === 'Custom' ? form.customStyle : form.style,
         }),
       });
       if (!res.ok) throw new Error('Research failed');
@@ -93,8 +92,6 @@ export default function NewComicPage() {
         body: JSON.stringify({
           comicId,
           description: form.description,
-          genre: form.genre,
-          style: form.style === 'Custom' ? form.customStyle : form.style,
           research,
         }),
       });
@@ -106,6 +103,26 @@ export default function NewComicPage() {
       setError(e instanceof Error ? e.message : 'error');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleEditStoryline(editPrompt: string) {
+    if (!comicId || selectedOption === null) return;
+    setEditing(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/story/edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comicId, editPrompt }),
+      });
+      if (!res.ok) throw new Error('Edit failed');
+      const { option } = (await res.json()) as { option: StoryOptionData };
+      setOptions((prev) => prev.map((o, i) => (i === selectedOption ? option : o)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'error');
+    } finally {
+      setEditing(false);
     }
   }
 
@@ -129,7 +146,7 @@ export default function NewComicPage() {
         body: JSON.stringify({ comicId }),
       });
       if (!res.ok) throw new Error('Panels failed');
-      const { panels } = (await res.json()) as { panels: { id: string; panelIndex: number; prompt: string }[] };
+      const { panels } = (await res.json()) as { panels: PanelData[] };
       setPanels(panels);
       setStep(3);
     } catch (e) {
@@ -176,6 +193,8 @@ export default function NewComicPage() {
           setSelected={setSelectedOption}
           loading={loading}
           onNext={handleSelectAndPanels}
+          onEdit={handleEditStoryline}
+          editing={editing}
         />
       )}
       {step === 3 && (

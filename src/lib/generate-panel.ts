@@ -1,4 +1,4 @@
-import { fal, FAL_GENERATE_MODEL } from '@/lib/fal';
+import { fal, FAL_GENERATE_MODEL, GENERATE_PARAMS } from '@/lib/fal';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export interface GenerateResult {
@@ -37,16 +37,14 @@ export async function generatePanelInternal(panelId: string, comicId: string, us
   await supabaseAdmin.from('panels').update({ status: 'generating' }).eq('id', panelId);
 
   try {
-    const fullPrompt = `${panel.prompt}. Art style: ${comic.style} comic book art. ${comic.character_bible ?? ''}`;
+    const artStyle = comic.style || 'Manga';
+    const fullPrompt = `${panel.prompt}. Art style: ${artStyle} comic book art, ink-heavy, screentones, dynamic compositions. ${comic.character_bible ?? ''}`;
     const firstRef = refs?.[0]?.public_url;
 
     const result = await fal.subscribe(FAL_GENERATE_MODEL, {
       input: {
         prompt: fullPrompt,
-        image_size: 'landscape_16_9',
-        num_inference_steps: 28,
-        guidance_scale: 3.5,
-        num_images: 1,
+        ...GENERATE_PARAMS,
         ...(firstRef ? { ip_adapter_image_url: firstRef } : {}),
       },
     });
