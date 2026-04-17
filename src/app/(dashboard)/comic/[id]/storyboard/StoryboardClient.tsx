@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Comic, Panel, ReferenceImage, PanelStatus } from '@/types/database';
 import type { SSEEvent } from '@/types/api';
@@ -14,6 +14,24 @@ interface Props {
   references: ReferenceImage[];
 }
 
+function CopyButton({ text, label }: { text: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition shrink-0"
+      title={`Copy ${label ?? 'prompt'}`}
+    >
+      {copied ? 'Copied!' : label ?? 'Copy'}
+    </button>
+  );
+}
+
 export function StoryboardClient({ comic, initialPanels }: Props) {
   const [panels, setPanels] = useState(initialPanels);
   const [progress, setProgress] = useState({ generated: 0, total: 0 });
@@ -23,7 +41,7 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
   const [viewMode, setViewMode] = useState<'grid' | 'pages'>('pages');
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [editingPrompt, setEditingPrompt] = useState<{ id: string; prompt: string } | null>(null);
-  const [compositing, setCompositing] = useState(false);
+  const [expandedPanel, setExpandedPanel] = useState<string | null>(null);
 
   const doneCount = panels.filter((p) => p.status === 'done').length;
 
@@ -69,7 +87,6 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
     setRunning(true);
   }
 
-  // Regenerate single panel
   const regeneratePanel = useCallback(async (panelId: string) => {
     setRegeneratingId(panelId);
     setPanels((prev) => prev.map((p) => (p.id === panelId ? { ...p, status: 'generating' as PanelStatus } : p)));
@@ -91,14 +108,13 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
     }
   }, [comic.id]);
 
-  // Edit panel via SeedREAM/Kontext
-  const editPanel = useCallback(async (panelId: string, editPrompt: string) => {
+  const editPanel = useCallback(async (panelId: string, ep: string) => {
     setRegeneratingId(panelId);
     try {
       const res = await fetch('/api/image/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ panelId, comicId: comic.id, editPrompt }),
+        body: JSON.stringify({ panelId, comicId: comic.id, editPrompt: ep }),
       });
       if (!res.ok) throw new Error('Edit failed');
       const { imageUrl } = (await res.json()) as { imageUrl: string };
@@ -112,10 +128,38 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
     }
   }, [comic.id]);
 
+  function renderPanelPrompt(p: Panel) {
+    const isExpanded = expandedPanel === p.id;
+    const fullPrompt = `${p.prompt ?? ''}${comic.character_bible ? `\n\nArt style: Manga comic book art, ink-heavy, screentones, dynamic compositions.\n\n${comic.character_bible}` : ''}`;
+
+    return (
+      <div className="p-1.5">
+        <div className="flex items-start gap-1">
+          <div
+            className={`text-[9px] text-white/50 flex-1 cursor-pointer ${isExpanded ? '' : 'line-clamp-1'}`}
+            onClick={() => setExpandedPanel(isExpanded ? null : p.id)}
+            title="Click to expand"
+          >
+            {p.prompt}
+          </div>
+          <CopyButton text={fullPrompt} label="Prompt" />
+        </div>
+        {p.dialog && (
+          <div className="flex items-center gap-1 mt-0.5">
+            <div className={`text-[9px] text-accent/70 italic flex-1 ${isExpanded ? '' : 'line-clamp-1'}`}>
+              {"\u201C"}{p.dialog}{"\u201D"}
+            </div>
+            <CopyButton text={p.dialog} label="Dialog" />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
       <div className="mb-6">
-        <Link href="/dashboard" className="text-white/50 text-sm hover:text-white">← Back to Dashboard</Link>
+        <Link href="/dashboard" className="text-white/50 text-sm hover:text-white">{"\u2190"} Back to Dashboard</Link>
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
@@ -171,7 +215,6 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Panel grid */}
                 <div className="grid grid-cols-2 gap-3">
                   {pagePanels
                     .sort((a, b) => (a.position_in_page ?? 0) - (b.position_in_page ?? 0))
@@ -194,7 +237,6 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
                           </div>
                         )}
 
-                        {/* Hover actions */}
                         {p.status === 'done' && regeneratingId !== p.id && (
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                             <button
@@ -212,19 +254,11 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
                           </div>
                         )}
 
-                        <div className="p-1.5">
-                          <div className="text-[9px] text-white/50 line-clamp-1">{p.prompt}</div>
-                          {p.dialog && (
-                            <div className="text-[9px] text-accent/70 italic line-clamp-1 mt-0.5">
-                              {"\u201C"}{p.dialog}{"\u201D"}
-                            </div>
-                          )}
-                        </div>
+                        {renderPanelPrompt(p)}
                       </div>
                     ))}
                 </div>
 
-                {/* Page preview (auto-fit composite) */}
                 <PagePreview panels={pagePanels} pageIndex={pageNum - 1} />
               </div>
             </div>
@@ -274,10 +308,24 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
                 )}
 
                 <div className="p-2">
-                  <div className="text-[10px] text-white/50 line-clamp-2">{p.prompt}</div>
+                  <div className="flex items-start gap-1">
+                    <div
+                      className={`text-[10px] text-white/50 flex-1 cursor-pointer ${expandedPanel === p.id ? '' : 'line-clamp-2'}`}
+                      onClick={() => setExpandedPanel(expandedPanel === p.id ? null : p.id)}
+                    >
+                      {p.prompt}
+                    </div>
+                    <CopyButton
+                      text={`${p.prompt ?? ''}${comic.character_bible ? `\n\nArt style: Manga comic book art, ink-heavy, screentones, dynamic compositions.\n\n${comic.character_bible}` : ''}`}
+                      label="Prompt"
+                    />
+                  </div>
                   {p.dialog && (
-                    <div className="text-[10px] text-accent/70 italic line-clamp-1 mt-1">
-                      {"\u201C"}{p.dialog}{"\u201D"}
+                    <div className="flex items-center gap-1 mt-1">
+                      <div className="text-[10px] text-accent/70 italic flex-1 line-clamp-1">
+                        {"\u201C"}{p.dialog}{"\u201D"}
+                      </div>
+                      <CopyButton text={p.dialog} label="Dialog" />
                     </div>
                   )}
                 </div>
