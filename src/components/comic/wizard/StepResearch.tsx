@@ -31,6 +31,7 @@ export function StepResearch({ research, loading, onNext }: Props) {
       </section>
       <p className="text-xs text-white/40">Research powered by Grok + live web search</p>
       <Button onClick={onNext} loading={loading} size="lg">See story options →</Button>
+      {loading && <p className="text-white/50 text-sm">Grok is writing storylines...</p>}
     </div>
   );
 }
