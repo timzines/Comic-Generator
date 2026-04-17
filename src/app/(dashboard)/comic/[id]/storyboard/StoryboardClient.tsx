@@ -186,6 +186,21 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
           >
             Preview
           </Link>
+          <button
+            onClick={() => {
+              const artStyle = 'Art style: Manga comic book art, ink-heavy, screentones, dynamic compositions.';
+              const bible = comic.character_bible ? `\n${comic.character_bible}` : '';
+              const all = panels
+                .sort((a, b) => a.panel_index - b.panel_index)
+                .map((p) => `--- Panel ${p.panel_index} (Page ${p.page_number || 1}) ---\n${p.prompt}\n${artStyle}${bible}${p.dialog ? `\nDialog: ${p.dialog}` : ''}`)
+                .join('\n\n');
+              navigator.clipboard.writeText(all);
+              setToast('All prompts copied!');
+            }}
+            className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg hover:bg-white/10"
+          >
+            Copy All Prompts
+          </button>
           <Button onClick={generateAll} loading={running}>Generate All</Button>
         </div>
       </div>
