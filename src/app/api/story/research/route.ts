@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { grok, GROK_MODEL, stripJsonFences } from '@/lib/grok';
+import { grokChat, stripJsonFences } from '@/lib/grok';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import type { ResearchRequest, ResearchResponse } from '@/types/api';
 
@@ -15,23 +15,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'forbidden' }, { status: 403 });
     }
 
-    const completion = await grok.chat.completions.create({
-      model: GROK_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a creative director for a manga studio. You research visual and narrative inspiration for manga comics. Always respond with valid JSON only, no markdown.',
-        },
-        {
-          role: 'user',
-          content: `Search the internet for inspiration for a manga comic. The concept is: ${description}. Return a JSON object with two fields: "inspirations" (array of 5 strings, each a specific reference work or real-world source with brief explanation) and "themes" (array of 3 thematic angles to explore).`,
-        },
-      ],
-    });
+    const result = await grokChat([
+      {
+        role: 'system',
+        content:
+          'You are a creative director for a manga studio. You research visual and narrative inspiration for manga comics. Always respond with valid JSON only, no markdown.',
+      },
+      {
+        role: 'user',
+        content: `Search the internet for inspiration for a manga comic. The concept is: ${description}. Return a JSON object with two fields: "inspirations" (array of 5 strings, each a specific reference work or real-world source with brief explanation) and "themes" (array of 3 thematic angles to explore).`,
+      },
+    ]);
 
-    const raw = completion.choices[0]?.message?.content ?? '{}';
-    const parsed = JSON.parse(stripJsonFences(raw)) as ResearchResponse;
+    const parsed = JSON.parse(stripJsonFences(result.content)) as ResearchResponse;
     return NextResponse.json(parsed);
   } catch (err) {
     console.error('[research]', err);

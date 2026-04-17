@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { grok, GROK_MODEL, stripJsonFences } from '@/lib/grok';
+import { grokChat, stripJsonFences } from '@/lib/grok';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { OptionSchema } from '@/lib/schemas/story';
@@ -39,17 +39,15 @@ export async function POST(request: NextRequest) {
       tone: option.tone,
     };
 
-    const completion = await grok.chat.completions.create({
-      model: GROK_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a master manga writer and page layout director. You revise story structures based on editorial feedback. Respond ONLY with a valid JSON object. No markdown, no explanation, no preamble.',
-        },
-        {
-          role: 'user',
-          content: `Here is the current manga story option:
+    const result = await grokChat([
+      {
+        role: 'system',
+        content:
+          'You are a master manga writer and page layout director. You revise story structures based on editorial feedback. Respond ONLY with a valid JSON object. No markdown, no explanation, no preamble.',
+      },
+      {
+        role: 'user',
+        content: `Here is the current manga story option:
 
 ${JSON.stringify(currentOption, null, 2)}
 
@@ -72,12 +70,10 @@ Apply the edit and return a single updated JSON object with the same structure:
 - tone: string (2-3 words describing the emotional tone)
 
 Keep everything that the edit does not change. The total panels across all pages must equal estimatedPanels.`,
-        },
-      ],
-    });
+      },
+    ]);
 
-    const raw = completion.choices[0]?.message?.content ?? '{}';
-    const parsed = OptionSchema.parse(JSON.parse(stripJsonFences(raw)));
+    const parsed = OptionSchema.parse(JSON.parse(stripJsonFences(result.content)));
 
     await supabaseAdmin
       .from('story_options')

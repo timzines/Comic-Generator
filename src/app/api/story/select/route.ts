@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { grok, GROK_MODEL } from '@/lib/grok';
+import { grokChat } from '@/lib/grok';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { SelectOptionRequest } from '@/types/api';
@@ -28,22 +28,19 @@ export async function POST(request: NextRequest) {
     const acts = (option.act_breakdown as ActBreakdown[] | null) ?? [];
     const actSummary = acts.map((a) => `${a.act}: ${a.desc}`).join(' | ');
 
-    const completion = await grok.chat.completions.create({
-      model: GROK_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a comic book character designer. Respond only with a single paragraph of plain text.',
-        },
-        {
-          role: 'user',
-          content: `Based on this story: "${option.logline}" with these acts: ${actSummary}, write a CHARACTER BIBLE — a single dense paragraph that precisely describes the visual appearance of every named character. Include: hair color and style, eye color, clothing, distinguishing features, body type. Be extremely specific so an AI image generator can maintain consistency across 10+ panels. Focus only on visual appearance, not personality.`,
-        },
-      ],
-    });
+    const result = await grokChat([
+      {
+        role: 'system',
+        content:
+          'You are a comic book character designer. Respond only with a single paragraph of plain text.',
+      },
+      {
+        role: 'user',
+        content: `Based on this story: "${option.logline}" with these acts: ${actSummary}, write a CHARACTER BIBLE — a single dense paragraph that precisely describes the visual appearance of every named character. Include: hair color and style, eye color, clothing, distinguishing features, body type. Be extremely specific so an AI image generator can maintain consistency across 10+ panels. Focus only on visual appearance, not personality.`,
+      },
+    ]);
 
-    const characterBible = completion.choices[0]?.message?.content?.trim() ?? '';
+    const characterBible = result.content.trim();
 
     const pageCount = (option.estimated_pages as number | null) ?? 1;
     await supabaseAdmin

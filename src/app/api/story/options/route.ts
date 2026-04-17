@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { grok, GROK_MODEL, stripJsonFences } from '@/lib/grok';
+import { grokChat, stripJsonFences } from '@/lib/grok';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { OptionsSchema } from '@/lib/schemas/story';
@@ -19,17 +19,15 @@ export async function POST(request: NextRequest) {
 
     const { data: comic } = await supabaseAdmin.from('comics').select('title').eq('id', comicId).single();
 
-    const completion = await grok.chat.completions.create({
-      model: GROK_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a master manga writer and page layout director. You write compelling, visually-rich story structures with detailed page-by-page breakdowns. Respond ONLY with a valid JSON array. No markdown, no explanation, no preamble.',
-        },
-        {
-          role: 'user',
-          content: `Write exactly 3 distinct story options for a manga comic titled "${comic?.title ?? 'Untitled'}".
+    const result = await grokChat([
+      {
+        role: 'system',
+        content:
+          'You are a master manga writer and page layout director. You write compelling, visually-rich story structures with detailed page-by-page breakdowns. Respond ONLY with a valid JSON array. No markdown, no explanation, no preamble.',
+      },
+      {
+        role: 'user',
+        content: `Write exactly 3 distinct story options for a manga comic titled "${comic?.title ?? 'Untitled'}".
 
 Concept: ${description}
 
@@ -52,12 +50,10 @@ Return a JSON array of exactly 3 objects, each with:
 - tone: string (2-3 words describing the emotional tone)
 
 Think like a manga editor: pace reveals across pages, use splash panels for dramatic moments, and write dialog that sounds natural. The total panels across all pages must equal estimatedPanels.`,
-        },
-      ],
-    });
+      },
+    ]);
 
-    const raw = completion.choices[0]?.message?.content ?? '[]';
-    const parsed = OptionsSchema.parse(JSON.parse(stripJsonFences(raw)));
+    const parsed = OptionsSchema.parse(JSON.parse(stripJsonFences(result.content)));
 
     await supabaseAdmin.from('story_options').delete().eq('comic_id', comicId);
     const rows = parsed.map((o, i) => ({

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { grok, GROK_MODEL, stripJsonFences } from '@/lib/grok';
+import { grokChat, stripJsonFences } from '@/lib/grok';
 import { requireUser, verifyComicOwnership } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { GeneratePanelsRequest } from '@/types/api';
@@ -59,17 +59,15 @@ export async function POST(request: NextRequest) {
 
     const totalPanels = pageStructure.reduce((sum, page) => sum + page.panels.length, 0);
 
-    const completion = await grok.chat.completions.create({
-      model: GROK_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a manga panel director. You write precise image generation prompts for each panel, respecting the page layout. Respond ONLY with a valid JSON array.',
-        },
-        {
-          role: 'user',
-          content: `Write individual image generation prompts for every panel of this manga comic.
+    const result = await grokChat([
+      {
+        role: 'system',
+        content:
+          'You are a manga panel director. You write precise image generation prompts for each panel, respecting the page layout. Respond ONLY with a valid JSON array.',
+      },
+      {
+        role: 'user',
+        content: `Write individual image generation prompts for every panel of this manga comic.
 
 Story: ${option.logline}
 Character bible: ${comic.character_bible}
@@ -91,12 +89,10 @@ Return a JSON array of objects, each with:
 - dialog: string or null (character speech/thought bubble text from the page structure, null if no dialog)
 
 IMPORTANT: Every single prompt must include the character's physical description from the character bible verbatim. This ensures consistency across all panels.`,
-        },
-      ],
-    });
+      },
+    ]);
 
-    const raw = completion.choices[0]?.message?.content ?? '[]';
-    const parsed = PanelsSchema.parse(JSON.parse(stripJsonFences(raw)));
+    const parsed = PanelsSchema.parse(JSON.parse(stripJsonFences(result.content)));
 
     await supabaseAdmin.from('panels').delete().eq('comic_id', comicId);
     const rows = parsed.map((p) => ({
