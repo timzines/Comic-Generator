@@ -115,7 +115,7 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
       <div className="mb-6">
-        <Link href="/dashboard" className="text-white/50 text-sm hover:text-white">&larr; Back to Dashboard</Link>
+        <Link href="/dashboard" className="text-white/50 text-sm hover:text-white">← Back to Dashboard</Link>
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
@@ -124,7 +124,7 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
           <div className="flex gap-2 mt-2">
             <span className="text-[10px] px-2 py-0.5 rounded bg-accent/10 border border-accent/30 text-accent">Manga</span>
             <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/60">
-              {sortedPages.length} pages &middot; {panels.length} panels
+              {sortedPages.length} pages · {panels.length} panels
             </span>
           </div>
           <p className="text-white/50 text-sm mt-2">{doneCount} of {panels.length} panels generated</p>
@@ -216,7 +216,7 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
                           <div className="text-[9px] text-white/50 line-clamp-1">{p.prompt}</div>
                           {p.dialog && (
                             <div className="text-[9px] text-accent/70 italic line-clamp-1 mt-0.5">
-                              &ldquo;{p.dialog}&rdquo;
+                              {"\u201C"}{p.dialog}{"\u201D"}
                             </div>
                           )}
                         </div>
@@ -277,7 +277,7 @@ export function StoryboardClient({ comic, initialPanels }: Props) {
                   <div className="text-[10px] text-white/50 line-clamp-2">{p.prompt}</div>
                   {p.dialog && (
                     <div className="text-[10px] text-accent/70 italic line-clamp-1 mt-1">
-                      &ldquo;{p.dialog}&rdquo;
+                      {"\u201C"}{p.dialog}{"\u201D"}
                     </div>
                   )}
                 </div>

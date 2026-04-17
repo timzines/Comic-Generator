@@ -93,7 +93,7 @@ export function ReaderClient({ comic, panels }: Props) {
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
         <Link href={`/comic/${comic.id}/storyboard`} className="text-white/50 text-sm hover:text-white">
-          &larr; Back to Storyboard
+          ← Back to Storyboard
         </Link>
         <h1 className="font-bold">{comic.title}</h1>
         <div className="flex gap-2">
@@ -144,13 +144,13 @@ export function ReaderClient({ comic, panels }: Props) {
               </div>
             );
           })}
-          <div className="text-center font-mono text-white/40 pt-8">&mdash; End &mdash;</div>
+          <div className="text-center font-mono text-white/40 pt-8">— End —</div>
         </div>
       ) : (
         // Raw panel view (fallback)
         <div className="max-w-[760px] mx-auto space-y-1 pb-16">
           <div className="text-center py-8 text-white/40 text-sm">
-            Click &ldquo;Auto-Fit All&rdquo; to composite panels into manga pages with speech bubbles
+            Click {"\u201C"}Auto-Fit All{"\u201D"} to composite panels into manga pages with speech bubbles
           </div>
           {panels.map((p) => (
             <div key={p.id} className="relative">

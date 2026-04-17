@@ -35,7 +35,7 @@ export function StepStory({ options, selected, setSelected, loading, onNext, onE
               <div className="flex gap-2">
                 <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/60 uppercase">{o.tone}</span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-accent/10 border border-accent/30 text-accent">
-                  {o.estimatedPages} pages &middot; {o.estimatedPanels} panels
+                  {o.estimatedPages} pages · {o.estimatedPanels} panels
                 </span>
               </div>
             </div>
@@ -64,7 +64,7 @@ export function StepStory({ options, selected, setSelected, loading, onNext, onE
                     {o.pageStructure.map((page) => (
                       <div key={page.pageNumber} className="bg-black/20 rounded-lg p-3">
                         <div className="text-xs font-bold text-white/60 mb-2">
-                          Page {page.pageNumber} &middot; {page.panelCount} panels
+                          Page {page.pageNumber} · {page.panelCount} panels
                         </div>
                         <div className="space-y-1.5">
                           {page.panels.map((panel) => (
@@ -73,7 +73,7 @@ export function StepStory({ options, selected, setSelected, loading, onNext, onE
                               <div>
                                 <span className="text-white/70">{panel.description}</span>
                                 {panel.dialog && (
-                                  <span className="ml-2 text-white/40 italic">&ldquo;{panel.dialog}&rdquo;</span>
+                                  <span className="ml-2 text-white/40 italic">{"\u201C"}{panel.dialog}{"\u201D"}</span>
                                 )}
                               </div>
                             </div>
