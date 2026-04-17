@@ -55,7 +55,8 @@ Think like a manga editor: pace reveals across pages, use splash panels for dram
 
     const parsed = OptionsSchema.parse(JSON.parse(stripJsonFences(result.content)));
 
-    await supabaseAdmin.from('story_options').delete().eq('comic_id', comicId);
+    const { error: delErr } = await supabaseAdmin.from('story_options').delete().eq('comic_id', comicId);
+    if (delErr) console.error('[options] delete failed:', delErr);
     const rows = parsed.map((o, i) => ({
       comic_id: comicId,
       option_index: i,
@@ -68,7 +69,11 @@ Think like a manga editor: pace reveals across pages, use splash panels for dram
       tone: o.tone,
       selected: false,
     }));
-    await supabaseAdmin.from('story_options').insert(rows);
+    const { error: insertErr } = await supabaseAdmin.from('story_options').insert(rows);
+    if (insertErr) {
+      console.error('[options] insert failed:', insertErr);
+      return NextResponse.json({ error: 'insert_failed', detail: insertErr.message }, { status: 500 });
+    }
 
     return NextResponse.json({ options: parsed });
   } catch (err) {
