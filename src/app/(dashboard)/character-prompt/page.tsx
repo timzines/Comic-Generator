@@ -14,7 +14,7 @@ const LOADING_MESSAGES = [
   'Assembling master prompt...',
 ];
 
-function resizeImage(file: File, maxSize: number): Promise<{ base64: string; mediaType: string }> {
+function resizeImage(file: File, maxSize: number): Promise<{ imageBase64: string; mediaType: string }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -37,7 +37,7 @@ function resizeImage(file: File, maxSize: number): Promise<{ base64: string; med
         ctx.drawImage(img, 0, 0, width, height);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
         const base64 = dataUrl.split(',')[1];
-        resolve({ base64, mediaType: 'image/jpeg' });
+        resolve({ imageBase64: base64, mediaType: 'image/jpeg' });
       };
       img.onerror = reject;
       img.src = reader.result as string;
@@ -95,7 +95,7 @@ function DownloadBtn({ text, filename }: { text: string; filename: string }) {
 
 export default function CharacterPromptPage() {
   const [preview, setPreview] = useState<string | null>(null);
-  const [imageData, setImageData] = useState<{ base64: string; mediaType: string } | null>(null);
+  const [imageData, setImageData] = useState<{ imageBase64: string; mediaType: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [sheet, setSheet] = useState<CharacterSheet | null>(null);
