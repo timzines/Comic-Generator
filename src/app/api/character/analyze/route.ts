@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.XAI_VISION_MODEL || 'grok-2-vision-latest',
+        model: process.env.XAI_MODEL || 'grok-4.20-reasoning',
         messages: [
           {
             role: 'system',
