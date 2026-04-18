@@ -9,6 +9,7 @@ const LINKS = [
   { href: '/dashboard', label: 'Home' },
   { href: '/library', label: 'Saved Comics' },
   { href: '/new', label: 'New Comic' },
+  { href: '/character-prompt', label: 'Character Prompt' },
 ];
 
 export function Nav() {
