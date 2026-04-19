@@ -54,20 +54,31 @@ export function buildMasterPrompt(sheet: CharacterSheet): string {
 
   // 7. Art style
   paragraphs.push(
-    `The art style is ${sheet.art_style.overall} with ${sheet.art_style.line_weight} line weight and ${sheet.art_style.shading} shading. Screentone usage is ${sheet.art_style.screentone_usage}.${sheet.art_style.reference_artists.length > 0 ? " Stylistic influences draw from " + sheet.art_style.reference_artists.join(", ") + "." : ""} The overall color palette mood is ${sheet.art_style.color_palette_mood}. The default pose and expression: ${sheet.default_pose_expression}.`
+    `The art style is ${sheet.art_style.overall} with ${sheet.art_style.line_weight} line weight and ${sheet.art_style.shading} shading. Screentone usage is ${sheet.art_style.screentone_usage}.${sheet.art_style.reference_artists.length > 0 ? " Stylistic influences draw from " + sheet.art_style.reference_artists.join(", ") + "." : ""} The overall color palette mood is ${sheet.art_style.color_palette_mood}.`
   );
 
-  // 8. Consistency trigger
+  // 8. Framing (hard-locked character reference card format)
   paragraphs.push(
-    "Maintain character consistency across all generations."
+    `Framing: waist-up composition, character standing in a relaxed natural neutral pose, arms at sides or loosely relaxed, facing slightly toward the camera with a calm neutral expression. Plain pure white background (#FFFFFF), flat and seamless with no environment, props, or scenery. Even soft studio lighting with no cast shadow on the backdrop. This is a character reference card — render the character only, isolated against white.`
   );
 
-  // 9. Negative line
-  if (sheet.negative_prompt_elements.length > 0) {
-    paragraphs.push(
-      `Avoid: ${sheet.negative_prompt_elements.join(", ")}.`
-    );
-  }
+  // 9. Consistency trigger
+  paragraphs.push(
+    "Maintain 1:1 character and art style consistency across all generations. The face, eyes, hair, skin, body proportions, outfit, and art style must remain identical every time; only minor natural variation in the relaxed standing pose is acceptable."
+  );
+
+  // 10. Negative line (always include framing negatives)
+  const framingNegatives = [
+    "any background other than pure white",
+    "environment or scenery",
+    "props or held objects not listed",
+    "full-body or close-up framing",
+    "dynamic action poses",
+    "exaggerated expressions",
+    "cast shadows on the backdrop",
+  ];
+  const allNegatives = [...framingNegatives, ...sheet.negative_prompt_elements];
+  paragraphs.push(`Avoid: ${allNegatives.join(", ")}.`);
 
   return paragraphs.join("\n\n");
 }
