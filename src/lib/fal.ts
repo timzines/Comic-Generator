@@ -7,22 +7,22 @@ fal.config({
 
 export { fal };
 
-// Generation models — swap these to change the generation pipeline
-export const FAL_GENERATE_MODEL = 'fal-ai/flux/dev';
+// Seedream 4.5 — text-to-image for panels without reference characters
+export const FAL_GENERATE_MODEL = 'fal-ai/bytedance/seedream/v4.5/text-to-image';
 
-// Edit models — plug-and-play: swap to seedream when ready
-// Options: 'fal-ai/flux-pro/kontext' (current), 'fal-ai/seedream-3' (next)
-export const FAL_EDIT_MODEL = 'fal-ai/flux-pro/kontext';
+// Seedream 4.5 edit — used for panel edits AND for generations that include
+// reference images (Seedream T2I has no ref support; refs go through edit).
+export const FAL_EDIT_MODEL = 'fal-ai/bytedance/seedream/v4.5/edit';
 
-// Model-specific default params for each pipeline stage
 export const GENERATE_PARAMS = {
   image_size: 'landscape_16_9' as const,
-  num_inference_steps: 28,
-  guidance_scale: 3.5,
   num_images: 1,
+  enable_safety_checker: true,
+  enhance_prompt_mode: 'standard' as const,
 };
 
 export const EDIT_PARAMS = {
-  num_inference_steps: 28,
-  guidance_scale: 3.5,
+  num_images: 1,
+  enable_safety_checker: true,
+  enhance_prompt_mode: 'standard' as const,
 };

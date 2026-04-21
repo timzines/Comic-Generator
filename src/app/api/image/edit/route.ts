@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
     const body = (await request.json()) as EditImageRequest;
-    const { panelId, comicId, editPrompt, maskImage, referenceImageUrl } = body;
+    const { panelId, comicId, editPrompt, referenceImageUrl } = body;
 
     if (!(await verifyComicOwnership(comicId, user.id))) {
       return NextResponse.json({ error: 'forbidden' }, { status: 403 });
@@ -23,13 +23,14 @@ export async function POST(request: NextRequest) {
       .single();
     if (!panel?.image_url) return NextResponse.json({ error: 'panel_has_no_image' }, { status: 400 });
 
-    const input: Record<string, unknown> = {
+    const imageUrls = [panel.image_url];
+    if (referenceImageUrl) imageUrls.push(referenceImageUrl);
+
+    const input = {
       prompt: editPrompt,
-      image_url: panel.image_url,
+      image_urls: imageUrls,
       ...EDIT_PARAMS,
     };
-    if (maskImage) input.mask_url = maskImage;
-    if (referenceImageUrl) input.reference_image_url = referenceImageUrl;
 
     const result = await fal.subscribe(FAL_EDIT_MODEL, { input: input as never });
 

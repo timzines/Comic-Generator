@@ -1,8 +1,8 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import type { Comic, Panel, ReferenceImage } from '@/types/database';
-import { EditCanvas, type EditCanvasHandle } from '@/components/comic/EditCanvas';
+import { PlaceholderImage } from '@/components/ui/PlaceholderImage';
 import { Button } from '@/components/ui/Button';
 import { Toast } from '@/components/ui/Toast';
 
@@ -17,13 +17,11 @@ export function EditStudioClient({ panel: initialPanel, comic, references }: Pro
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
-  const canvasRef = useRef<EditCanvasHandle>(null);
 
   async function applyEdit() {
     if (!editPrompt.trim()) return;
     setLoading(true);
     try {
-      const maskImage = canvasRef.current?.getImageData() ?? undefined;
       const res = await fetch('/api/image/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,7 +29,6 @@ export function EditStudioClient({ panel: initialPanel, comic, references }: Pro
           panelId: panel.id,
           comicId: comic.id,
           editPrompt,
-          maskImage,
           referenceImageUrl: selectedRef ?? undefined,
         }),
       });
@@ -40,7 +37,6 @@ export function EditStudioClient({ panel: initialPanel, comic, references }: Pro
       setPanel((p) => ({ ...p, image_url: imageUrl }));
       setHistory((prev) => [{ prompt: editPrompt, time: new Date().toLocaleTimeString() }, ...prev]);
       setEditPrompt('');
-      canvasRef.current?.clear();
       setToast({ msg: 'Edit applied', type: 'success' });
     } catch (e) {
       setToast({ msg: e instanceof Error ? e.message : 'error', type: 'error' });
@@ -76,7 +72,14 @@ export function EditStudioClient({ panel: initialPanel, comic, references }: Pro
       <h1 className="text-2xl font-bold mb-6">Edit panel #{String(panel.panel_index).padStart(2, '0')}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
-        <EditCanvas ref={canvasRef} imageUrl={panel.image_url} />
+        <div className="relative bg-surface border border-white/10 rounded-lg overflow-hidden">
+          {panel.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={panel.image_url} alt="panel" className="w-full block" />
+          ) : (
+            <PlaceholderImage aspectRatio="16/9" />
+          )}
+        </div>
 
         <div className="space-y-5">
           <div>
@@ -88,7 +91,7 @@ export function EditStudioClient({ panel: initialPanel, comic, references }: Pro
               className="w-full min-h-[120px] bg-surface border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:border-accent"
             />
             <Button onClick={applyEdit} loading={loading} className="mt-2 w-full">
-              Apply with Flux Kontext
+              Apply edit
             </Button>
           </div>
 

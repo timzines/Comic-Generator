@@ -1,4 +1,4 @@
-import { fal, FAL_GENERATE_MODEL, GENERATE_PARAMS } from '@/lib/fal';
+import { fal, FAL_GENERATE_MODEL, FAL_EDIT_MODEL, GENERATE_PARAMS, EDIT_PARAMS } from '@/lib/fal';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export interface GenerateResult {
@@ -39,15 +39,16 @@ export async function generatePanelInternal(panelId: string, comicId: string, us
   try {
     const artStyle = comic.style || 'Manga';
     const fullPrompt = `${panel.prompt}. Art style: ${artStyle} comic book art, ink-heavy, screentones, dynamic compositions. ${comic.character_bible ?? ''}`;
-    const firstRef = refs?.[0]?.public_url;
+    const refUrls = (refs ?? []).map((r) => r.public_url).filter(Boolean);
 
-    const result = await fal.subscribe(FAL_GENERATE_MODEL, {
-      input: {
-        prompt: fullPrompt,
-        ...GENERATE_PARAMS,
-        ...(firstRef ? { ip_adapter_image_url: firstRef } : {}),
-      },
-    });
+    // Seedream T2I takes no references; route to edit endpoint when refs exist.
+    const useEdit = refUrls.length > 0;
+    const model = useEdit ? FAL_EDIT_MODEL : FAL_GENERATE_MODEL;
+    const input = useEdit
+      ? { prompt: fullPrompt, image_urls: refUrls.slice(0, 4), ...EDIT_PARAMS }
+      : { prompt: fullPrompt, ...GENERATE_PARAMS };
+
+    const result = await fal.subscribe(model, { input: input as never });
 
     // @ts-expect-error — runtime shape from fal
     const rawUrl: string | undefined = result?.data?.images?.[0]?.url ?? result?.images?.[0]?.url;
