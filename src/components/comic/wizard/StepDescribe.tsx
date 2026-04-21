@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import type { WizardForm } from '@/app/(dashboard)/new/page';
 import { Button } from '@/components/ui/Button';
+import { ARCHETYPES, ARCHETYPE_KEYS, type ArchetypeKey } from '@/lib/story/archetypes';
 
 interface UploadedRef { id: string; publicUrl: string; label: string; localPreview?: string }
 
@@ -44,6 +45,10 @@ export function StepDescribe({ form, setForm, loading, ensureComic, onNext }: Pr
 
   const canNext = form.title && form.description;
 
+  function setArchetype(next: ArchetypeKey | null) {
+    setForm({ ...form, archetype: next ?? undefined });
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-4xl font-extrabold">Describe your comic</h1>
@@ -59,6 +64,39 @@ export function StepDescribe({ form, setForm, loading, ensureComic, onNext }: Pr
         placeholder="Describe your world, characters, tone, and what you want to happen…"
         className="w-full min-h-[160px] bg-surface border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-accent"
       />
+
+      <div>
+        <div className="text-sm text-white/60 mb-2">Format</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setArchetype(null)}
+            className={`text-left p-3 rounded-lg border transition ${
+              !form.archetype ? 'border-accent bg-accent/5' : 'border-white/10 hover:border-white/30'
+            }`}
+          >
+            <div className="font-semibold text-sm">Long-form manga</div>
+            <div className="text-xs text-white/50 mt-1">3–8 pages, multi-act story. Original behavior.</div>
+          </button>
+          {ARCHETYPE_KEYS.map((key) => {
+            const a = ARCHETYPES[key];
+            const active = form.archetype === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setArchetype(key)}
+                className={`text-left p-3 rounded-lg border transition ${
+                  active ? 'border-accent bg-accent/5' : 'border-white/10 hover:border-white/30'
+                }`}
+              >
+                <div className="font-semibold text-sm">4-panel · {a.name}</div>
+                <div className="text-xs text-white/50 mt-1">{a.summary}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div>
         <div className="text-sm text-white/60 mb-2">Character reference images (optional)</div>

@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { ResearchResponse, StoryOptionData } from '@/types/api';
+import type { ArchetypeKey } from '@/lib/story/archetypes';
 import { StepDescribe } from '@/components/comic/wizard/StepDescribe';
 import { StepResearch } from '@/components/comic/wizard/StepResearch';
 import { StepStory } from '@/components/comic/wizard/StepStory';
@@ -11,6 +12,7 @@ export interface WizardForm {
   title: string;
   description: string;
   referenceImageIds: string[];
+  archetype?: ArchetypeKey;
 }
 
 interface PanelData {
@@ -26,11 +28,12 @@ const STEPS = ['Describe', 'Research', 'Story', 'Panels'];
 
 export default function NewComicPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [comicId, setComicId] = useState<string | null>(null);
   const [form, setForm] = useState<WizardForm>({
-    title: '',
-    description: '',
+    title: searchParams.get('title') ?? '',
+    description: searchParams.get('description') ?? '',
     referenceImageIds: [],
   });
   const [research, setResearch] = useState<ResearchResponse | null>(null);
@@ -93,6 +96,7 @@ export default function NewComicPage() {
           comicId,
           description: form.description,
           research,
+          archetype: form.archetype,
         }),
       });
       if (!res.ok) throw new Error('Story options failed');
@@ -143,7 +147,7 @@ export default function NewComicPage() {
       const res = await fetch('/api/story/panels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comicId }),
+        body: JSON.stringify({ comicId, archetype: form.archetype }),
       });
       if (!res.ok) throw new Error('Panels failed');
       const { panels } = (await res.json()) as { panels: PanelData[] };

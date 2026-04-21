@@ -1,4 +1,5 @@
 import type { ActBreakdown, PageStructure } from './database';
+import type { ArchetypeKey } from '@/lib/story/archetypes';
 
 export interface ResearchRequest {
   comicId: string;
@@ -23,6 +24,7 @@ export interface StoryOptionsRequest {
   comicId: string;
   description: string;
   research: ResearchResponse;
+  archetype?: ArchetypeKey;
 }
 export interface StoryOptionsResponse {
   options: StoryOptionData[];
@@ -46,7 +48,35 @@ export interface EditStorylineResponse {
 
 export interface GeneratePanelsRequest {
   comicId: string;
+  archetype?: ArchetypeKey;
 }
+
+export interface ScoreRequest {
+  option: StoryOptionData;
+  archetype?: ArchetypeKey;
+}
+export interface ScoreResponse {
+  score: number;
+  rationale: string;
+}
+
+export interface AutopilotRequest {
+  title: string;
+  description: string;
+  archetype?: ArchetypeKey;
+}
+
+export type AutopilotStage = 'create' | 'research' | 'options' | 'score' | 'select' | 'panels' | 'images' | 'done';
+
+export type AutopilotEvent =
+  | { type: 'start'; comicId: string }
+  | { type: 'stage'; stage: AutopilotStage; detail?: string }
+  | { type: 'score'; optionIndex: number; score: number; rationale: string }
+  | { type: 'selected'; optionIndex: number; score: number }
+  | { type: 'panel'; panelIndex: number; imageUrl: string }
+  | { type: 'panelError'; panelIndex: number; message: string }
+  | { type: 'complete'; comicId: string; panelCount: number; errorCount: number }
+  | { type: 'error'; stage: AutopilotStage; message: string };
 export interface GeneratePanelsResponse {
   panels: { id: string; panelIndex: number; pageNumber: number; positionInPage: number; prompt: string; dialog: string | null }[];
 }
@@ -63,7 +93,6 @@ export interface EditImageRequest {
   panelId: string;
   comicId: string;
   editPrompt: string;
-  maskImage?: string;
   referenceImageUrl?: string;
 }
 export interface EditImageResponse {
