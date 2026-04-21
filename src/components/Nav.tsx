@@ -8,8 +8,11 @@ import { useUser } from '@/contexts/UserContext';
 const LINKS = [
   { href: '/dashboard', label: 'Home' },
   { href: '/library', label: 'Saved Comics' },
+  { href: '/factory', label: 'Factory' },
   { href: '/new', label: 'New Comic' },
+  { href: '/trends', label: 'Trends' },
   { href: '/character-prompt', label: 'Character Prompt' },
+  { href: '/compose', label: 'Scene Composer' },
 ];
 
 export function Nav() {
