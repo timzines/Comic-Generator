@@ -1,4 +1,4 @@
-export type ComicStatus = 'drafting' | 'generating' | 'done' | 'error';
+export type ComicStatus = 'drafting' | 'generating' | 'pending_review' | 'done' | 'error';
 export type PanelStatus = 'pending' | 'generating' | 'done' | 'error';
 
 export interface ActBreakdown {
@@ -31,6 +31,7 @@ export interface Comic {
   genre: string | null;
   style: string | null;
   custom_style: string | null;
+  archetype: string | null;
   status: ComicStatus;
   character_bible: string | null;
   panel_count: number;
