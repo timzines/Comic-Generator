@@ -1,8 +1,14 @@
 'use client';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharacterSheet } from '@/lib/character/types';
 import { Button } from '@/components/ui/Button';
 import { Toast } from '@/components/ui/Toast';
+import {
+  loadLibrary,
+  saveCharacter,
+  deleteCharacter,
+  type SavedCharacter,
+} from '@/lib/character/library';
 
 const LOADING_MESSAGES = [
   'Examining face geometry...',
@@ -103,8 +109,13 @@ export default function CharacterPromptPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [showJson, setShowJson] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [library, setLibrary] = useState<SavedCharacter[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setLibrary(loadLibrary());
+  }, []);
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -156,6 +167,28 @@ export default function CharacterPromptPage() {
     }
   }
 
+  function handleSaveToLibrary() {
+    if (!sheet || !preview) return;
+    const name = window.prompt('Name this character for your library:', sheet.anchor_tag);
+    if (name === null) return;
+    saveCharacter(sheet, preview, name);
+    setLibrary(loadLibrary());
+    setToast('Saved to character library!');
+  }
+
+  function handleLoadSaved(c: SavedCharacter) {
+    setSheet(c.sheet);
+    setPreview(c.thumbnail);
+    setImageData(null);
+    setError(null);
+  }
+
+  function handleDeleteSaved(id: string) {
+    if (!window.confirm('Delete this saved character?')) return;
+    deleteCharacter(id);
+    setLibrary(loadLibrary());
+  }
+
   function toggleSection(key: string) {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -196,6 +229,46 @@ export default function CharacterPromptPage() {
       <p className="text-white/50 text-sm mb-8">
         Upload a character image. Get a detailed, structured prompt optimized for Grok Imagine.
       </p>
+
+      {library.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-white/50 uppercase tracking-wide">
+              Your Library ({library.length})
+            </h2>
+            <a href="/compose" className="text-xs text-accent hover:underline">
+              Compose scene &rarr;
+            </a>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {library.map((c) => (
+              <div
+                key={c.id}
+                className="shrink-0 w-32 bg-surface border border-white/10 rounded-lg overflow-hidden hover:border-accent/40 transition group"
+              >
+                <button
+                  onClick={() => handleLoadSaved(c)}
+                  className="block w-full"
+                  title="Load"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={c.thumbnail} alt={c.name} className="w-full h-32 object-cover" />
+                  <div className="p-2 text-left">
+                    <div className="text-xs font-semibold text-white/80 truncate">{c.name}</div>
+                    <div className="text-[10px] text-white/40 truncate">{c.sheet.anchor_tag}</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleDeleteSaved(c.id)}
+                  className="w-full text-[10px] text-red-300/60 hover:text-red-300 py-1 border-t border-white/5"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left: Upload */}
@@ -421,10 +494,15 @@ export default function CharacterPromptPage() {
                 )}
               </div>
 
-              {/* Regenerate */}
-              <Button variant="ghost" onClick={analyze} loading={loading} className="w-full">
-                Regenerate Analysis
-              </Button>
+              {/* Save + Regenerate */}
+              <div className="flex gap-2">
+                <Button onClick={handleSaveToLibrary} className="flex-1">
+                  Save to Library
+                </Button>
+                <Button variant="ghost" onClick={analyze} loading={loading} disabled={!imageData} className="flex-1">
+                  Regenerate Analysis
+                </Button>
+              </div>
             </>
           ) : !loading && (
             <div className="flex items-center justify-center h-full text-white/30 text-sm">
